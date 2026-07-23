@@ -49,6 +49,11 @@ Route::prefix('admin')->group(function () {
         Route::put('/blog/{post:slug}', [AdminContentController::class, 'updateBlogPost']);
         Route::delete('/blog/{post:slug}', [AdminContentController::class, 'destroyBlogPost']);
         Route::get('/inquiries', [AdminContentController::class, 'inquiries']);
+        Route::get('/settings', [AdminContentController::class, 'settings']);
+        Route::put('/settings', [AdminContentController::class, 'updateSettings']);
         Route::get('/media', [AdminContentController::class, 'media']);
+        Route::post('/media', [AdminContentController::class, 'storeMedia']);
+        Route::put('/media/{media}', [AdminContentController::class, 'updateMedia']);
+        Route::delete('/media/{media}', [AdminContentController::class, 'destroyMedia']);
     });
 });

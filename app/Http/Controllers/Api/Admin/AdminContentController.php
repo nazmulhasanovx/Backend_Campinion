@@ -15,6 +15,7 @@ use App\Models\ProjectCategory;
 use App\Models\QuoteRequest;
 use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -160,6 +161,103 @@ class AdminContentController extends Controller
     public function media()
     {
         return response()->json(['data' => Media::latest()->get()]);
+    }
+
+    public function settings()
+    {
+        return response()->json([
+            'data' => [
+                'settings' => \App\Models\Setting::pluck('value', 'key'),
+            ],
+        ]);
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $data = $request->validate([
+            'settings' => ['required', 'array'],
+            'settings.company' => ['nullable', 'array'],
+            'settings.company.name' => ['nullable', 'string', 'max:255'],
+            'settings.company.tagline' => ['nullable', 'string', 'max:500'],
+            'settings.company.email' => ['nullable', 'email', 'max:255'],
+            'settings.company.phone' => ['nullable', 'string', 'max:255'],
+            'settings.company.address' => ['nullable', 'string', 'max:500'],
+            'settings.home_hero' => ['nullable', 'array'],
+            'settings.home_hero.title' => ['nullable', 'string', 'max:255'],
+            'settings.home_hero.subtitle' => ['nullable', 'string', 'max:1000'],
+            'settings.home_hero.image' => ['nullable', 'string', 'max:2048'],
+            'settings.home_hero.tabs' => ['nullable', 'array'],
+            'settings.home_hero.tabs.*' => ['string', 'max:100'],
+            'settings.seo_defaults' => ['nullable', 'array'],
+            'settings.seo_defaults.title' => ['nullable', 'string', 'max:255'],
+            'settings.seo_defaults.description' => ['nullable', 'string', 'max:1000'],
+            'settings.map' => ['nullable', 'array'],
+            'settings.map.provider' => ['nullable', 'string', 'max:255'],
+            'settings.map.default_location' => ['nullable', 'string', 'max:255'],
+            'settings.map.api_key' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        foreach ($data['settings'] as $key => $value) {
+            \App\Models\Setting::updateOrCreate(['key' => $key], ['value' => $value]);
+        }
+
+        return response()->json([
+            'message' => 'Settings saved successfully.',
+            'data' => [
+                'settings' => \App\Models\Setting::pluck('value', 'key'),
+            ],
+        ]);
+    }
+
+    public function storeMedia(Request $request)
+    {
+        $data = $request->validate([
+            'file' => ['required', 'image', 'max:5120'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('media', 'public');
+        $title = ($data['title'] ?? null) ?: Str::headline(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+
+        $media = Media::create([
+            'title' => $title,
+            'file_path' => $this->publicStorageUrl($request, $path),
+            'alt_text' => $data['alt_text'] ?? $title,
+            'category' => $data['category'] ?? 'Media',
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+        ]);
+
+        return response()->json(['data' => $media], 201);
+    }
+
+    public function updateMedia(Request $request, Media $media)
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $media->update($data);
+
+        return response()->json(['data' => $media]);
+    }
+
+    public function destroyMedia(Media $media)
+    {
+        $path = parse_url($media->file_path, PHP_URL_PATH);
+
+        if (is_string($path) && Str::startsWith($path, '/storage/')) {
+            Storage::disk('public')->delete(Str::after($path, '/storage/'));
+        }
+
+        $media->delete();
+
+        return response()->json(['message' => 'Media deleted successfully.']);
     }
 
     private function validatedProject(Request $request, ?Project $project = null): array
@@ -344,5 +442,10 @@ class AdminContentController extends Controller
             ['slug' => Str::slug($name)],
             ['name' => $name]
         );
+    }
+
+    private function publicStorageUrl(Request $request, string $path): string
+    {
+        return rtrim($request->getSchemeAndHttpHost(), '/').'/storage/'.ltrim($path, '/');
     }
 }
