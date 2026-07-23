@@ -8,10 +8,13 @@ use App\Http\Resources\ProjectResource;
 use App\Http\Resources\ServiceResource;
 use App\Models\BlogPost;
 use App\Models\Faq;
+use App\Models\GalleryItem;
 use App\Models\OfficeLocation;
+use App\Models\Partner;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Models\TeamMember;
 use App\Models\Testimonial;
 
 class PublicContentController extends Controller
@@ -75,6 +78,21 @@ class PublicContentController extends Controller
     public function faqs()
     {
         return response()->json(['data' => Faq::where('is_active', true)->orderBy('sort_order')->get()]);
+    }
+
+    public function partners()
+    {
+        return response()->json(['data' => Partner::where('is_active', true)->orderBy('sort_order')->get()]);
+    }
+
+    public function team()
+    {
+        return response()->json(['data' => TeamMember::where('is_active', true)->orderBy('sort_order')->get()]);
+    }
+
+    public function gallery()
+    {
+        return response()->json(['data' => GalleryItem::with('project:id,title,slug')->orderBy('sort_order')->get()]);
     }
 
     public function settings()

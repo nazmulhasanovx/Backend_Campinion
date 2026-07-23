@@ -9,11 +9,17 @@ use App\Http\Resources\ServiceResource;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\ContactMessage;
+use App\Models\Faq;
+use App\Models\GalleryItem;
 use App\Models\Media;
+use App\Models\OfficeLocation;
+use App\Models\Partner;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\QuoteRequest;
 use App\Models\Service;
+use App\Models\TeamMember;
+use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -260,6 +266,162 @@ class AdminContentController extends Controller
         return response()->json(['message' => 'Media deleted successfully.']);
     }
 
+    public function testimonials()
+    {
+        return response()->json(['data' => Testimonial::orderBy('sort_order')->latest()->get()]);
+    }
+
+    public function storeTestimonial(Request $request)
+    {
+        $testimonial = Testimonial::create($this->validatedTestimonial($request));
+
+        return response()->json(['data' => $testimonial], 201);
+    }
+
+    public function updateTestimonial(Request $request, Testimonial $testimonial)
+    {
+        $testimonial->update($this->validatedTestimonial($request));
+
+        return response()->json(['data' => $testimonial]);
+    }
+
+    public function destroyTestimonial(Testimonial $testimonial)
+    {
+        $testimonial->delete();
+
+        return response()->json(['message' => 'Testimonial deleted successfully.']);
+    }
+
+    public function partners()
+    {
+        return response()->json(['data' => Partner::orderBy('sort_order')->latest()->get()]);
+    }
+
+    public function storePartner(Request $request)
+    {
+        $partner = Partner::create($this->validatedPartner($request));
+
+        return response()->json(['data' => $partner], 201);
+    }
+
+    public function updatePartner(Request $request, Partner $partner)
+    {
+        $partner->update($this->validatedPartner($request));
+
+        return response()->json(['data' => $partner]);
+    }
+
+    public function destroyPartner(Partner $partner)
+    {
+        $partner->delete();
+
+        return response()->json(['message' => 'Partner deleted successfully.']);
+    }
+
+    public function faqs()
+    {
+        return response()->json(['data' => Faq::orderBy('sort_order')->latest()->get()]);
+    }
+
+    public function storeFaq(Request $request)
+    {
+        $faq = Faq::create($this->validatedFaq($request));
+
+        return response()->json(['data' => $faq], 201);
+    }
+
+    public function updateFaq(Request $request, Faq $faq)
+    {
+        $faq->update($this->validatedFaq($request));
+
+        return response()->json(['data' => $faq]);
+    }
+
+    public function destroyFaq(Faq $faq)
+    {
+        $faq->delete();
+
+        return response()->json(['message' => 'FAQ deleted successfully.']);
+    }
+
+    public function offices()
+    {
+        return response()->json(['data' => OfficeLocation::orderBy('sort_order')->latest()->get()]);
+    }
+
+    public function storeOffice(Request $request)
+    {
+        $office = OfficeLocation::create($this->validatedOffice($request));
+
+        return response()->json(['data' => $office], 201);
+    }
+
+    public function updateOffice(Request $request, OfficeLocation $office)
+    {
+        $office->update($this->validatedOffice($request));
+
+        return response()->json(['data' => $office]);
+    }
+
+    public function destroyOffice(OfficeLocation $office)
+    {
+        $office->delete();
+
+        return response()->json(['message' => 'Office deleted successfully.']);
+    }
+
+    public function team()
+    {
+        return response()->json(['data' => TeamMember::orderBy('sort_order')->latest()->get()]);
+    }
+
+    public function storeTeamMember(Request $request)
+    {
+        $member = TeamMember::create($this->validatedTeamMember($request));
+
+        return response()->json(['data' => $member], 201);
+    }
+
+    public function updateTeamMember(Request $request, TeamMember $member)
+    {
+        $member->update($this->validatedTeamMember($request));
+
+        return response()->json(['data' => $member]);
+    }
+
+    public function destroyTeamMember(TeamMember $member)
+    {
+        $member->delete();
+
+        return response()->json(['message' => 'Team member deleted successfully.']);
+    }
+
+    public function gallery()
+    {
+        return response()->json(['data' => GalleryItem::with('project:id,title,slug')->orderBy('sort_order')->latest()->get()]);
+    }
+
+    public function storeGalleryItem(Request $request)
+    {
+        $item = GalleryItem::create($this->validatedGalleryItem($request));
+
+        return response()->json(['data' => $item->load('project:id,title,slug')], 201);
+    }
+
+    public function updateGalleryItem(Request $request, GalleryItem $item)
+    {
+        $item->update($this->validatedGalleryItem($request));
+
+        return response()->json(['data' => $item->load('project:id,title,slug')]);
+    }
+
+    public function destroyGalleryItem(GalleryItem $item)
+    {
+        $item->delete();
+
+        return response()->json(['message' => 'Gallery item deleted successfully.']);
+    }
+
     private function validatedProject(Request $request, ?Project $project = null): array
     {
         return $request->validate([
@@ -292,6 +454,85 @@ class AdminContentController extends Controller
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string'],
         ]);
+    }
+
+    private function validatedTestimonial(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'quote' => ['required', 'string'],
+            'is_active' => ['boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]) + ['is_active' => true, 'sort_order' => 0];
+    }
+
+    private function validatedPartner(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'logo' => ['nullable', 'string', 'max:2048'],
+            'url' => ['nullable', 'url', 'max:2048'],
+            'is_active' => ['boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]) + ['is_active' => true, 'sort_order' => 0];
+    }
+
+    private function validatedFaq(Request $request): array
+    {
+        return $request->validate([
+            'question' => ['required', 'string', 'max:255'],
+            'answer' => ['required', 'string'],
+            'is_active' => ['boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]) + ['is_active' => true, 'sort_order' => 0];
+    }
+
+    private function validatedOffice(Request $request): array
+    {
+        return $request->validate([
+            'city' => ['required', 'string', 'max:255'],
+            'address' => ['required', 'string', 'max:500'],
+            'phone' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'map_embed_url' => ['nullable', 'string', 'max:2048'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]) + ['sort_order' => 0];
+    }
+
+    private function validatedTeamMember(Request $request): array
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'designation' => ['required', 'string', 'max:255'],
+            'department' => ['required', 'string', 'max:255'],
+            'photo' => ['nullable', 'string', 'max:2048'],
+            'bio' => ['nullable', 'string'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:255'],
+            'social_links' => ['nullable', 'array'],
+            'is_active' => ['boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $data['social_links'] = $data['social_links'] ?? [];
+        $data['is_active'] = $data['is_active'] ?? true;
+        $data['sort_order'] = $data['sort_order'] ?? 0;
+
+        return $data;
+    }
+
+    private function validatedGalleryItem(Request $request): array
+    {
+        return $request->validate([
+            'project_id' => ['nullable', 'exists:projects,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'max:255'],
+            'image' => ['required', 'string', 'max:2048'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]) + ['sort_order' => 0];
     }
 
     private function projectPayload(array $data): array
