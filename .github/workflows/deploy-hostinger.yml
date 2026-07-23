@@ -163,7 +163,7 @@ jobs:
                 "DB_PASSWORD" => getenv("DB_PASSWORD"),
                 "FILESYSTEM_DISK" => "public",
                 "QUEUE_CONNECTION" => "database",
-                "CACHE_STORE" => "database",
+                "CACHE_STORE" => "file",
                 "SESSION_DRIVER" => "database",
                 "MAIL_MAILER" => getenv("MAIL_HOST") ? "smtp" : "log",
                 "MAIL_HOST" => getenv("MAIL_HOST") ?: "127.0.0.1",
