@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AuthController;
+use App\Http\Controllers\Api\Admin\AdminContentController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Public\InquiryController;
 use App\Http\Controllers\Api\Public\PublicContentController;
@@ -32,5 +33,10 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/dashboard', DashboardController::class);
+        Route::get('/projects', [AdminContentController::class, 'projects']);
+        Route::get('/services', [AdminContentController::class, 'services']);
+        Route::get('/blog', [AdminContentController::class, 'blog']);
+        Route::get('/inquiries', [AdminContentController::class, 'inquiries']);
+        Route::get('/media', [AdminContentController::class, 'media']);
     });
 });
